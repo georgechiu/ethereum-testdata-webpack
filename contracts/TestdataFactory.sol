@@ -18,6 +18,7 @@ contract TestdataFactory {
     struct Testdata {
         string name;
         uint size;
+        string hashcode;
     }
     
     Testdata[] testdata;
@@ -25,15 +26,15 @@ contract TestdataFactory {
     mapping(uint => address) dataToOwner;
     mapping(address => uint) ownerDataCount;
     
-    function _createTestdata(string _name, uint _size) internal {
-        uint id = testdata.push(Testdata(_name, _size)) - 1;
+    function _createTestdata(string _name, uint _size, string _hashcode) internal {
+        uint id = testdata.push(Testdata(_name, _size, _hashcode)) - 1;
         dataToOwner[id] = msg.sender;
         ownerDataCount[msg.sender]++;
         emit NewTestdataEvent(id, _name);
     }
     
-    function createTestdata(string _name, uint _size) public {
-        _createTestdata(_name, _size);
+    function createTestdata(string _name, uint _size, string _hashcode) public {
+        _createTestdata(_name, _size, _hashcode);
     }
     
     function getAllTestdata(address _owner) external view returns(uint[]) {
@@ -50,8 +51,8 @@ contract TestdataFactory {
         return result;
     }
     
-    function getTestdata(uint _dataId) external view onlyOwnerOf(_dataId) returns(string, uint) {
-        return(testdata[_dataId].name, testdata[_dataId].size);
+    function getTestdata(uint _dataId) external view onlyOwnerOf(_dataId) returns(string, uint, string) {
+        return(testdata[_dataId].name, testdata[_dataId].size, testdata[_dataId].hashcode);
     }
     
     function getTestdataCount(address _owner) external view returns(uint) {

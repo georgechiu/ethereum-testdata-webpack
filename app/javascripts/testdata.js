@@ -4,6 +4,8 @@ import "../stylesheets/app.css";
 // Import libraries we need.
 import { default as Web3 } from 'web3';
 import { default as Contract } from 'truffle-contract';
+// https://github.com/emn178/js-sha256
+import { sha256 } from 'js-sha256';
 
 // Import our contract artifacts and turn them into usable abstractions.
 import testdata_artifacts from '../../build/contracts/TestdataFactory.json';
@@ -86,13 +88,49 @@ window.App = {
     });
   },
 
+  getFilename: function () {
+    var fullPath = document.getElementById('testfile').value;
+
+    if (fullPath) {
+      var startIndex = (fullPath.indexOf('\\') >= 0 ? fullPath.lastIndexOf('\\') : fullPath.lastIndexOf('/'));
+      var filename = fullPath.substring(startIndex);
+      if (filename.indexOf('\\') === 0 || filename.indexOf('/') === 0) {
+        filename = filename.substring(1);
+      }
+      document.getElementById('filename').value = filename;
+    }
+  },
+
+  getFileSizeAndHashcode: function () {
+    var reader = new FileReader();
+    reader.onload = function () {
+      var text = reader.result;
+      var size = document.getElementById('filesize');
+      size.value = text.length;
+
+      var hashcode = document.getElementById('hashcode');
+      hashcode.value = sha256(text);
+    };
+    var input = document.getElementById('testfile');
+    reader.readAsBinaryString(input.files[0]);
+  },
+
+  changeFile: function () {
+    var self = this;
+    self.getFilename();
+    self.getFileSizeAndHashcode();
+  },
+
   uploadFile: function () {
     var self = this;
     var filename = document.getElementById("filename").value;
-    var size = 0;
+    var filesize = document.getElementById("filesize").value;
+    var hashcode = document.getElementById("hashcode").value;
+    var files_span = document.getElementById("files");
 
-    self.setStatus("Initiating transaction... (please wait)");
     self.clearReceipt();
+    files_span.innerHTML = "";
+    self.setStatus("Initiating transaction... (please wait)");
 
     var testdata;
     Testdata.deployed().then(function (instance) {
@@ -101,13 +139,21 @@ window.App = {
       var NewTestdataEvent = testdata.NewTestdataEvent();
       NewTestdataEvent.watch(function (error, result) {
         if (!error) {
-          // todo
+          testdata.getAllTestdata(account).then(function (file_ids) {
+            files_span.innerHTML += "<ul>Your file list:";
+            for (var file_id of file_ids) {
+              testdata.getTestdata(file_id, { from: account }).then(function (result) {
+                files_span.innerHTML += "<li>File Name: " + result[0] + ", Size: " + result[1] + ", Hash Code: " + result[2] + "</li>";
+              });
+            }
+            files_span.innerHTML += "</ul>";
+          });
         } else {
           console.log(error);
         }
       });
 
-      testdata.createTestdata(filename, size, { from: account }).then(function (tx) {
+      testdata.createTestdata(filename, filesize, hashcode, { from: account }).then(function (tx) {
         console.log(tx.receipt);
         self.setStatus("Successfully uploaded file: " + filename);
         self.setReceipt(tx.receipt);
