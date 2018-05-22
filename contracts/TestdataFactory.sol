@@ -8,7 +8,7 @@ pragma solidity ^0.4.21;
 
 contract TestdataFactory {
     
-    event NewTestdata(uint dataId, string name);
+    event NewTestdataEvent(uint dataId, string name);
     
     modifier onlyOwnerOf(uint _dataId) {
         require(msg.sender == dataToOwner[_dataId]);
@@ -29,7 +29,7 @@ contract TestdataFactory {
         uint id = testdata.push(Testdata(_name, _size)) - 1;
         dataToOwner[id] = msg.sender;
         ownerDataCount[msg.sender]++;
-        emit NewTestdata(id, _name);
+        emit NewTestdataEvent(id, _name);
     }
     
     function createTestdata(string _name, uint _size) public {
