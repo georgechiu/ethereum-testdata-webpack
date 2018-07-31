@@ -46,6 +46,13 @@ window.App = {
     status.innerHTML = message;
   },
 
+  clearInput: function () {
+    document.getElementById("filename").value = "";
+    document.getElementById("filesize").value = "";
+    document.getElementById("hashcode").value = "";
+    document.getElementById("testfile").value = "";
+  },
+
   setReceipt: function (receipt) {
     var receipt_span = document.getElementById("receipt");
     var html_text = "<br>Receipt: <br>Block Hash: " + receipt.blockHash;
@@ -157,6 +164,7 @@ window.App = {
         console.log(tx.receipt);
         self.setStatus("Successfully uploaded file: " + filename);
         self.setReceipt(tx.receipt);
+        self.clearInput();
       });
     }).catch(function (e) {
       console.log(e);
